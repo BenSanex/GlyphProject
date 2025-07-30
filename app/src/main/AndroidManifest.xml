@@ -24,6 +24,9 @@
         </activity>
         <service
             android:name=".service.PomodoroService"
+            android:exported="false" />
+        <service
+            android:name=".service.PomodoroToy"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.nothing.glyph.TOY"/>
