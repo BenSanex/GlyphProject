@@ -15,11 +15,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import com.example.pomodoro.service.PomodoroService
 import com.example.pomodoro.ui.theme.PomodoroTheme
 
@@ -44,6 +47,13 @@ class MainActivity : ComponentActivity() {
         startService(intent)
     }
 
+    private fun startServiceWithDuration(duration: Long) {
+        val intent = Intent(this, PomodoroService::class.java).apply {
+            putExtra(PomodoroService.EXTRA_DURATION, duration)
+        }
+        startService(intent)
+    }
+
     private fun stopPomodoroService() {
         val intent = Intent(this, PomodoroService::class.java)
         stopService(intent)
@@ -53,40 +63,77 @@ class MainActivity : ComponentActivity() {
     private fun PomodoroScreen(modifier: Modifier = Modifier) {
         val minuteText = remember { mutableStateOf("25") }
         val running = remember { mutableStateOf(false) }
+        val remaining = remember { mutableLongStateOf(25 * 60_000L) }
+        val initialDuration = remember { mutableLongStateOf(25 * 60_000L) }
+
+        LaunchedEffect(running.value) {
+            while (running.value && remaining.value > 0) {
+                delay(1000L)
+                remaining.value -= 1000L
+            }
+            if (remaining.value <= 0L) running.value = false
+        }
+
         Column(
             modifier = modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Pomodoro Timer",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Stay focused! \uD83C\uDF45",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Ben's awesome vibe coded glyph matrix pomodoro timer app",
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            OutlinedTextField(
-                value = minuteText.value,
-                onValueChange = { minuteText.value = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Minutes") },
-                enabled = !running.value,
-                modifier = Modifier.fillMaxWidth()
+
+            val minutes = (remaining.value / 1000) / 60
+            val seconds = (remaining.value / 1000) % 60
+            Text(
+                text = String.format("%02d:%02d", minutes, seconds),
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            if (!running.value) {
+                OutlinedTextField(
+                    value = minuteText.value,
+                    onValueChange = { minuteText.value = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Minutes") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Button(
+                    onClick = {
+                        val minutes = minuteText.value.toIntOrNull() ?: 25
+                        val duration = minutes * 60_000L
+                        remaining.value = duration
+                        initialDuration.value = duration
+                        startServiceWithDuration(duration)
+                        running.value = true
+                    },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Start")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        stopPomodoroService()
+                        running.value = false
+                    },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Pause")
+                }
+            }
+
             Button(
                 onClick = {
-                    if (running.value) {
-                        stopPomodoroService()
-                    } else {
-                        val minutes = minuteText.value.toIntOrNull() ?: 25
-                        startServiceWithMinutes(minutes)
-                    }
-                    running.value = !running.value
+                    stopPomodoroService()
+                    remaining.value = initialDuration.value
+                    running.value = false
                 },
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier.padding(top = 8.dp)
             ) {
-                Text(if (running.value) "Stop" else "Start")
+                Text("Reset")
             }
         }
     }
