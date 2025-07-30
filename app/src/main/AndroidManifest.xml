@@ -24,6 +24,19 @@
         </activity>
         <service
             android:name=".service.PomodoroService"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.nothing.glyph.TOY"/>
+            </intent-filter>
+            <meta-data
+                android:name="com.nothing.glyph.toy.name"
+                android:resource="@string/app_name"/>
+            <meta-data
+                android:name="com.nothing.glyph.toy.image"
+                android:resource="@mipmap/ic_launcher"/>
+            <meta-data
+                android:name="com.nothing.glyph.toy.longpress"
+                android:value="1"/>
+        </service>
     </application>
 </manifest>

@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -51,7 +53,20 @@ class MainActivity : ComponentActivity() {
     private fun PomodoroScreen(modifier: Modifier = Modifier) {
         val minuteText = remember { mutableStateOf("25") }
         val running = remember { mutableStateOf(false) }
-        Column(modifier.padding(16.dp)) {
+        Column(
+            modifier = modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Pomodoro Timer",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Stay focused! \uD83C\uDF45",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
             OutlinedTextField(
                 value = minuteText.value,
                 onValueChange = { minuteText.value = it.filter { ch -> ch.isDigit() } },
